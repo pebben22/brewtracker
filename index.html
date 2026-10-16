@@ -12,30 +12,39 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
+<script>
+  /* apply the saved theme before first paint to avoid a flash */
+  try { var t = localStorage.getItem('brewtracker.theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
 </head>
 <body>
 <header class="top">
-  <div class="brand"><span class="logo">&#127866;</span> Brew Tracker</div>
-  <div class="picker">
-    <select id="recipeSel" aria-label="Recipe"></select>
-    <button data-act="newRecipe">New</button>
-    <button data-act="dupRecipe">Duplicate</button>
-    <button data-act="delRecipe" class="danger">Delete</button>
-    <button data-act="exportRecipe">Export</button>
-    <label class="btn">Import<input type="file" id="importFile" accept=".json" hidden></label>
+  <div class="wrap top-in">
+    <div class="brand"><span class="logo">&#127866;</span> Brew Tracker</div>
+    <div class="picker">
+      <select id="recipeSel" aria-label="Recipe"></select>
+      <button data-act="newRecipe">New</button>
+      <button data-act="dupRecipe">Duplicate</button>
+      <button data-act="delRecipe" class="danger">Delete</button>
+      <button data-act="exportRecipe">Export</button>
+      <label class="btn">Import<input type="file" id="importFile" accept=".json" hidden></label>
+      <button data-act="toggleTheme" id="themeBtn" title="Switch between automatic, light and dark">Theme: auto</button>
+    </div>
   </div>
 </header>
 
-<section class="summary" id="summary"></section>
+<div class="wrap"><section class="summary" id="summary"></section></div>
 
 <nav class="tabs" id="tabs">
-  <button data-tab="recipe">Recipe</button>
-  <button data-tab="malt">Malt Bill</button>
-  <button data-tab="water">Water Profile</button>
-  <button data-tab="log">Brew Log</button>
+  <div class="wrap tabs-in">
+    <button data-tab="recipe">Recipe</button>
+    <button data-tab="malt">Malt Bill</button>
+    <button data-tab="water">Water Profile</button>
+    <button data-tab="log">Brew Log</button>
+  </div>
 </nav>
 
-<main id="view"></main>
+<main class="wrap" id="view"></main>
 
 <script src="calc.js"></script>
 <script src="app.js"></script>

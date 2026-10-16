@@ -43,6 +43,15 @@
   let view = 'recipe';
   const mashUI = { step: 0, remaining: null, running: false, timer: null, total: 0 };
 
+  // ---------- theme: auto (follow system) -> light -> dark ----------
+  const THEME_KEY = 'brewtracker.theme';
+  function currentTheme() { try { const t = localStorage.getItem(THEME_KEY); return t === 'light' || t === 'dark' ? t : 'auto'; } catch (e) { return 'auto'; } }
+  function applyTheme(t) {
+    if (t === 'auto') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
+    try { if (t === 'auto') localStorage.removeItem(THEME_KEY); else localStorage.setItem(THEME_KEY, t); } catch (e) { /* storage unavailable */ }
+    const b = $('#themeBtn'); if (b) b.textContent = 'Theme: ' + t;
+  }
+
   // ---------- helpers ----------
   function getPath(o, p) { return p.split('.').reduce((a, k) => (a == null ? a : a[k]), o); }
   function setPath(o, p, v) { const ks = p.split('.'); const last = ks.pop(); const t = ks.reduce((a, k) => a[k], o); t[last] = v; }
@@ -90,14 +99,14 @@
       <td data-label="Use"><select data-bind="hops.${i}.use" data-rerender="1"><option value="boil" ${h.use === 'boil' ? 'selected' : ''}>Boil</option><option value="whirlpool" ${h.use === 'whirlpool' ? 'selected' : ''}>Whirlpool / flameout</option><option value="dry" ${h.use === 'dry' ? 'selected' : ''}>Dry hop</option></select></td>
       <td class="num" data-label="Minutes">${numIn(`hops.${i}.min`, h.min)}</td><td class="full right"><button class="small danger" data-act="delHop" data-i="${i}" aria-label="Remove hop">Remove</button></td></tr>`).join('');
     return `
-    <div class="card"><h2>Recipe</h2><div class="grid">
+    <div class="card"><h2>Recipe</h2><div class="grid c3">
       ${field('Name', txtIn('name', r.name))}${field('Style', txtIn('style', r.style, 'e.g. American Pale Ale'))}
       ${field('Batch size into fermenter (L)', numIn('batchL', r.batchL))}${field('Boil time (min)', numIn('boilMin', r.boilMin))}
       ${field('Brewhouse efficiency (%)', numIn('efficiency', r.efficiency))}${field('Boil-off (L / hour)', numIn('boilOffLph', r.boilOffLph))}
       ${field('Trub / kettle loss (L)', numIn('trubLossL', r.trubLossL))}${field('Grain absorption (L / kg)', numIn('absorption', r.absorption))}
       ${field('Mash thickness (L water / kg grain)', numIn('mashRatio', r.mashRatio))}
     </div></div>
-    <div class="grid two">
+    <div class="grid two split">
       <div class="card"><h3>Hops</h3><div class="table-wrap"><table class="cards"><thead><tr><th>Hop</th><th class="num">g</th><th class="num">Alpha %</th><th>Use</th><th class="num">Min</th><th></th></tr></thead><tbody>${hops}</tbody></table></div>
         <p><button data-act="addHop">+ Add hop</button> <span class="muted small">IBU by Tinseth, estimated: ${f0(s.ibu)}</span></p></div>
       <div class="card"><h3>Yeast</h3><div class="grid">${field('Yeast', txtIn('yeast.name', r.yeast.name, 'e.g. US-05'))}${field('Apparent attenuation (%)', numIn('yeast.attenuation', r.yeast.attenuation))}</div>
@@ -134,7 +143,7 @@
     return `<table><thead><tr><th></th><th class="num">Alkalinity (as CaCO3)</th><th class="num">Residual alk.</th><th class="num">SO4 : Cl</th><th>Character</th></tr></thead><tbody>${line('Source', w.source)}${line('Target', w.target)}</tbody></table>`;
   }
   function ionInputs(base, ions) {
-    return `<div class="grid">${C.ION_KEYS.map(k => field(C.ION_LABEL[k] + ' ppm', numIn(`${base}.${k}`, ions[k]))).join('')}</div>`;
+    return `<div class="grid c3">${C.ION_KEYS.map(k => field(C.ION_LABEL[k] + ' ppm', numIn(`${base}.${k}`, ions[k]))).join('')}</div>`;
   }
   function viewWater() {
     const r = R(), w = r.water;
@@ -145,7 +154,7 @@
       <div><h3>Target profile</h3>${field('Preset', `<select data-bind="water.targetPreset" data-action="tgtPreset">${C.WATER_TARGETS.map(p => `<option value="${p.id}" ${w.targetPreset === p.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select>`)}
         <div style="height:8px"></div>${ionInputs('water.target', w.target)}</div></div>
       <div id="ratioInfo" class="table-wrap" style="margin-top:14px">${waterIonInfo()}</div></div>
-    <div class="card"><h3>Treatment options</h3><div class="grid">
+    <div class="card"><h3>Treatment options</h3><div class="grid c4">
       ${field('RO / distilled water share (%)', numIn('water.roPct', w.roPct, { min: 0 }))}
       ${field('Add salts to', `<select data-bind="water.treat"><option value="all" ${w.treat === 'all' ? 'selected' : ''}>Mash + sparge water</option><option value="mash" ${w.treat === 'mash' ? 'selected' : ''}>Mash water only</option></select>`)}
       ${field('Target mash pH (5.2 - 5.6)', numIn('water.targetPh', w.targetPh, { step: 0.05 }))}
@@ -355,6 +364,7 @@
     dupRecipe() { const c = JSON.parse(JSON.stringify(R())); c.id = uid(); c.name += ' (copy)'; c.log = []; db.recipes.push(c); db.current = c.id; },
     delRecipe() { if (!confirm('Delete this recipe?')) return; db.recipes = db.recipes.filter(r => r.id !== db.current); if (!db.recipes.length) db.recipes.push(newRecipe()); db.current = db.recipes[0].id; },
     exportRecipe() { const blob = new Blob([JSON.stringify(R(), null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = (R().name || 'recipe').replace(/[^\w-]+/g, '_') + '.json'; a.click(); return false; },
+    toggleTheme() { const order = ['auto', 'light', 'dark']; applyTheme(order[(order.indexOf(currentTheme()) + 1) % 3]); return false; },
     goCalc() { view = 'calc'; }, goMash() { view = 'mash'; }, goBack() { view = 'recipe'; }, goWater() { view = 'water'; },
     applyRo(el) { const w = R().water; w.roPct = parseFloat(el.dataset.p); w.manual = null; },
     resetManual() { R().water.manual = null; },
@@ -444,6 +454,7 @@
     if (el.dataset.rerender) { save(); render(); }
   });
   window.addEventListener('beforeunload', save);
+  applyTheme(currentTheme());
   render();
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
 })();

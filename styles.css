@@ -1,11 +1,21 @@
+/* Theme: follows the system unless forced with data-theme="light" | "dark" (Theme button) */
 :root {
+  color-scheme: light;
   --bg: #f6f2ea; --panel: #ffffff; --ink: #2a2118; --muted: #7a6c5c; --line: #e3d9c8;
   --accent: #b9650f; --accent-ink: #ffffff; --accent-soft: #f7e6d0;
   --ok: #2f7d3b; --ok-soft: #e1f2e3; --warn: #a5650a; --warn-soft: #fbefd4; --bad: #b3261e; --bad-soft: #fbe3e0;
   --shadow: 0 1px 2px rgba(60, 40, 10, .08);
 }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #1b1713; --panel: #26201a; --ink: #f1e8da; --muted: #a89a86; --line: #3a3026;
+  --accent: #e0902f; --accent-ink: #1b1713; --accent-soft: #3a2a15;
+  --ok: #7bc886; --ok-soft: #1f3322; --warn: #e8b35a; --warn-soft: #3a2d12; --bad: #f1867e; --bad-soft: #3d1f1c;
+  --shadow: none;
+}
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
     --bg: #1b1713; --panel: #26201a; --ink: #f1e8da; --muted: #a89a86; --line: #3a3026;
     --accent: #e0902f; --accent-ink: #1b1713; --accent-soft: #3a2a15;
     --ok: #7bc886; --ok-soft: #1f3322; --warn: #e8b35a; --warn-soft: #3a2d12; --bad: #f1867e; --bad-soft: #3d1f1c;
@@ -19,7 +29,11 @@ h2 { font-size: 1.25rem; } h3 { font-size: 1.02rem; }
 .muted { color: var(--muted); } .small { font-size: .85rem; }
 .right { text-align: right; }
 
-header.top { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; padding: 12px 20px; background: var(--panel); border-bottom: 1px solid var(--line); }
+/* one centred column shared by header, summary, tabs and content */
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: 24px; padding-right: 24px; }
+header.top { background: var(--panel); border-bottom: 1px solid var(--line); padding: 12px 0; }
+.top-in { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.picker select { width: auto; min-width: 220px; }
 .brand { font-weight: 700; font-size: 1.15rem; } .logo { font-size: 1.3rem; }
 .picker { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 
@@ -35,21 +49,25 @@ input, select, textarea { background: var(--bg); border: 1px solid var(--line); 
 input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 textarea { min-height: 90px; resize: vertical; }
 
-.summary { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 20px 6px; align-items: stretch; }
+.summary { display: flex; flex-wrap: wrap; gap: 10px; padding: 16px 0 8px; align-items: stretch; }
 .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 6px 14px; min-width: 88px; box-shadow: var(--shadow); }
 .stat b { display: block; font-size: 1.15rem; } .stat span { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
 .summary .spacer { flex: 1; }
 .summary .cta { display: flex; gap: 8px; align-items: center; }
 .summary .cta button { padding: 10px 18px; }
 
-.tabs { display: flex; gap: 4px; padding: 8px 20px 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tabs { border-bottom: 1px solid var(--line); }
+.tabs-in { display: flex; gap: 4px; padding-top: 8px; overflow-x: auto; }
 .tabs button { border: 0; border-bottom: 3px solid transparent; border-radius: 0; background: none; padding: 8px 16px; color: var(--muted); font-weight: 600; }
 .tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
 
-main { padding: 18px 20px 60px; max-width: 1150px; margin: 0 auto; }
+main.wrap { padding-top: 18px; padding-bottom: 60px; }
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 16px; box-shadow: var(--shadow); }
 .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
-.grid.two { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+.grid.two { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+.grid.c3 { grid-template-columns: repeat(3, 1fr); }
+@media (min-width: 901px) { .grid.two.split { grid-template-columns: 3fr 2fr; } }
+.grid.c4 { grid-template-columns: repeat(4, 1fr); }
 label.f { display: block; font-size: .8rem; color: var(--muted); }
 label.f > :last-child { margin-top: 3px; color: var(--ink); font-size: 1rem; }
 
@@ -104,12 +122,14 @@ table.cards .full { }
   button, .btn { min-height: 40px; }
   button.small { min-height: 34px; padding: 4px 12px; }
 
-  header.top { padding: 10px 14px; gap: 8px; }
+  .wrap { padding-left: 14px; padding-right: 14px; }
+  header.top { padding: 10px 0; }
+  .top-in { gap: 8px; }
   .picker { width: 100%; }
-  .picker select { flex: 1 1 100%; }
+  .picker select { flex: 1 1 100%; width: 100%; }
   .picker button, .picker .btn { flex: 1 1 auto; padding: 6px 8px; font-size: .9rem; text-align: center; }
 
-  .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 12px 14px 4px; }
+  .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 12px 0 4px; }
   .stat { min-width: 0; padding: 6px 10px; }
   .summary .spacer { display: none; }
   .summary .cta { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -117,12 +137,14 @@ table.cards .full { }
 
   /* tabs become a bottom bar */
   .tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--panel); border-top: 1px solid var(--line); border-bottom: 0; padding: 0 0 env(safe-area-inset-bottom); gap: 0; overflow: visible; }
+  .tabs .wrap { padding-left: 0; padding-right: 0; }
+  .tabs-in { padding-top: 0; overflow: visible; }
   .tabs button { flex: 1; padding: 14px 4px; font-size: .85rem; border-bottom: 0; border-top: 3px solid transparent; }
   .tabs button.active { border-top-color: var(--accent); }
 
-  main { padding: 12px 14px 24px; }
+  main.wrap { padding-top: 12px; padding-bottom: 24px; }
   .card { padding: 12px; }
-  .grid { grid-template-columns: 1fr 1fr; }
+  .grid, .grid.c3, .grid.c4 { grid-template-columns: 1fr 1fr; }
   .grid.two { grid-template-columns: 1fr; }
   .big { font-size: 1.3rem; }
   .timer { font-size: 3.2rem; }
@@ -149,3 +171,5 @@ table.cards .full { }
   table.ions th, table.ions td { padding: 8px 4px; font-size: .9rem; }
   .strip-in { gap: 10px; }
 }
+
+@media (min-width: 701px) and (max-width: 900px) { .grid.c3 { grid-template-columns: repeat(2, 1fr); } .grid.c4 { grid-template-columns: repeat(2, 1fr); } }
